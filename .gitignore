@@ -1,0 +1,10 @@
+# 本地调试输出与运行时中间产物(含脱敏后的敏感值, 不入库)
+tests/output/
+check_result.json
+betterleaks_report*.json
+betterleaks_runtime.toml
+result.json
+
+# Python
+__pycache__/
+*.pyc

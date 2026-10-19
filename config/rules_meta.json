@@ -1,0 +1,7 @@
+{
+ "rules": {
+  "tca-internal-token": {
+   "publish": false
+  }
+ }
+}

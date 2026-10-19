@@ -1,0 +1,9 @@
+# 文本文件统一 LF
+* text=auto eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+
+# 二进制走 git-lfs(与同级工具 trivy 的惯例一致), 覆盖上面的文本规则并禁用换行处理
+bin/** filter=lfs diff=lfs merge=lfs -text

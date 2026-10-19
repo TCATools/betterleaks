@@ -1,0 +1,14 @@
+# rules/custom/internal-token.toml
+# TCA 工具级自定义规则示例：公司内部凭据格式
+# 维护流程：在此目录新增/修改 *.toml 后执行 scripts/merge_custom_rules.py 与 scripts/gen_rules.py，
+# 并将生成的 betterleaks.json 同步到 TCA 平台规则包。
+
+[[rules]]
+id = "tca-internal-token"
+description = "发现内部系统访问令牌(TCA-INTERNAL 前缀)，请确认是否为有效凭据并及时撤销轮换。"
+regex = '''TCA-INTERNAL-[A-Za-z0-9]{20,40}'''
+keywords = ["TCA-INTERNAL"]
+confidence = "high"
+tags = ["internal", "token"]
+# publish=false: 仅保留在 tca.toml 中用于测试, 不发布到 TCA 规则包(betterleaks.json)
+publish = false

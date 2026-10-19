@@ -1,0 +1,60 @@
+{
+  "task_params": {
+    "scan_languages": [],
+    "rules": ["tca-internal-token", "aws-access-token", "github-pat", "private-key", "my-project-token"],
+    "rule_list": [
+      {
+        "name": "tca-internal-token",
+        "gid": 10800,
+        "pkg_id": 209,
+        "pkg_name": "betterleaks rule package",
+        "pkg_type": 1,
+        "tool_name": "betterleaks",
+        "category": 1,
+        "display_name": "TcaInternalToken",
+        "rule_title": "内部系统访问令牌",
+        "severity": 2,
+        "custom": true,
+        "params": null
+      },
+      {
+        "name": "aws-access-token",
+        "gid": 10801,
+        "pkg_id": 209,
+        "pkg_name": "betterleaks rule package",
+        "pkg_type": 1,
+        "tool_name": "betterleaks",
+        "category": 1,
+        "display_name": "AwsAccessToken",
+        "rule_title": "AWS Access Token",
+        "severity": 2,
+        "custom": false,
+        "params": null
+      },
+      {
+        "name": "my-project-token",
+        "gid": 10802,
+        "pkg_id": 209,
+        "pkg_name": "betterleaks rule package",
+        "pkg_type": 1,
+        "tool_name": "betterleaks",
+        "category": 1,
+        "display_name": "MyProjectToken",
+        "rule_title": "项目自定义令牌规则",
+        "severity": 2,
+        "custom": true,
+        "params": "regex=MYPROJECT-[A-Za-z0-9]{16,}\nkeywords=MYPROJECT\nconfidence=high"
+      }
+    ],
+    "envs": "",
+    "pre_cmd": "",
+    "build_cmd": "",
+    "incr_scan": false,
+    "path_filters": {
+      "inclusion": [],
+      "exclusion": [],
+      "re_inclusion": [],
+      "re_exclusion": []
+    }
+  }
+}

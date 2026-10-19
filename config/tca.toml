@@ -1,0 +1,22 @@
+# 由 scripts/merge_custom_rules.py 自动生成, 请勿手工编辑
+# 自定义规则源文件: rules/custom/*.toml
+
+title = "TCA betterleaks tool config"
+
+# 全局误报过滤示例(按需在 rules/custom/*.toml 顶层定义 prefilter/filter):
+# prefilter = '''
+# matchesAny(attributes["path"], [
+#   `(^|/)testdata/`,
+# ])
+# '''
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "tca-internal-token"
+description = "发现内部系统访问令牌(TCA-INTERNAL 前缀)，请确认是否为有效凭据并及时撤销轮换。"
+regex = "TCA-INTERNAL-[A-Za-z0-9]{20,40}"
+confidence = "high"
+tags = ["internal", "token"]
+keywords = ["TCA-INTERNAL"]
