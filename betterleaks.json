@@ -2,7 +2,7 @@
   {
     "name": "betterleaks",
     "display_name": "Betterleaks",
-    "description": "基于 betterleaks 的敏感信息检测工具, 支持 460+ 内置规则与自定义规则",
+    "description": "基于 betterleaks 的敏感信息检测工具, 支持 400+ 内置规则与自定义规则",
     "license": "MIT License",
     "libscheme_set": [],
     "image_url": "",
