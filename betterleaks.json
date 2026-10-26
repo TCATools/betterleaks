@@ -4203,6 +4203,21 @@
         "disable": false
       },
       {
+        "real_name": "password-plaintext",
+        "display_name": "PasswordPlaintext",
+        "severity": "warning",
+        "category": "security",
+        "rule_title": "密码/口令/password/passwd 关键词后跟明文值(如 密码222222、password='Abc123!@#'、口令:abc123)",
+        "rule_params": null,
+        "custom": false,
+        "languages": [],
+        "solution": "",
+        "owner": null,
+        "labels": [],
+        "description": "密码/口令/password/passwd 关键词后跟明文值(如 密码222222、password='Abc123!@#'、口令:abc123)",
+        "disable": false
+      },
+      {
         "real_name": "paypal-client-secret.1",
         "display_name": "PaypalClientSecret.1",
         "severity": "error",
@@ -5610,6 +5625,36 @@
         "owner": null,
         "labels": [],
         "description": "Temporal Cloud API key.",
+        "disable": false
+      },
+      {
+        "real_name": "tencent-secret-id",
+        "display_name": "TencentSecretId",
+        "severity": "error",
+        "category": "security",
+        "rule_title": "发现腾讯云 SecretId(AKID 前缀)，可能泄露账号标识，请确认是否为有效凭据并及时轮换。",
+        "rule_params": null,
+        "custom": false,
+        "languages": [],
+        "solution": "",
+        "owner": null,
+        "labels": [],
+        "description": "发现腾讯云 SecretId(AKID 前缀)，可能泄露账号标识，请确认是否为有效凭据并及时轮换。",
+        "disable": false
+      },
+      {
+        "real_name": "tencent-secret-key",
+        "display_name": "TencentSecretKey",
+        "severity": "warning",
+        "category": "security",
+        "rule_title": "发现疑似腾讯云 SecretKey(与 AKID SecretId 同现)，可能暴露云资源访问权限，请确认有效性并及时轮换。",
+        "rule_params": null,
+        "custom": false,
+        "languages": [],
+        "solution": "",
+        "owner": null,
+        "labels": [],
+        "description": "发现疑似腾讯云 SecretKey(与 AKID SecretId 同现)，可能暴露云资源访问权限，请确认有效性并及时轮换。",
         "disable": false
       },
       {

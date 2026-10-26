@@ -1,7 +1,16 @@
 {
  "rules": {
+  "password-plaintext": {
+   "publish": true
+  },
   "tca-internal-token": {
    "publish": false
+  },
+  "tencent-secret-id": {
+   "publish": true
+  },
+  "tencent-secret-key": {
+   "publish": true
   }
  }
 }

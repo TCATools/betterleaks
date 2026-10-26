@@ -1,2 +1,4 @@
 # 测试样例: 假 GitHub Token(用于验证 github-pat 规则, ghp_ 后须为 36 位字母数字)
 token = "ghp_16C7uDS0TFakeTokenForTestingPurposes"
+
+Token = "qr9qlx382gw8br6i79gkhle565isza6n4z40tkfo"

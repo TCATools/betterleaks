@@ -1,0 +1,40 @@
+# rules/custom/tencent-aksk.toml
+# 腾讯云 API 密钥(AKSK)识别: SecretId 与 SecretKey 分别设计。
+#
+# 背景: betterleaks 默认规则(截至 v1.9.0)没有腾讯云凭据检测, AKID 密钥对只会被泛化的
+# generic-api-key(confidence=low)捡到, 既不精确也不醒目。此规则补齐。
+#
+# 设计语义:
+#   - tencent-secret-id: AKID 前缀格式高特异(腾讯云 SecretId 固定 AKID + 32 位字母数字),
+#     单独泄露即可确认风险 -> 独立检测、独立报告(confidence=high)。
+#   - tencent-secret-key: SecretKey 为定长 32 位字母数字, 单独出现无法确认是腾讯凭据
+#     (hash/uuid/其他密钥都长这样) -> 作为组合主规则, 要求 5 行窗口内有 SecretId 同现才报告,
+#     精度靠配对; filter 用熵/TokenRatio 下限过滤占位符与低熵误报。
+#   - 命名注意: 官方默认配置(截至 v1.9.0)无 tencent 规则; 若将来官方新增同名 id,
+#     [extend] 合并时同 id 整条覆盖(自定义优先), gen_rules.py 的差异报告会提示。
+
+[[rules]]
+id = "tencent-secret-id"
+description = "发现腾讯云 SecretId(AKID 前缀)，可能泄露账号标识，请确认是否为有效凭据并及时轮换。"
+regex = '''\b(AKID[A-Za-z0-9]{32})\b'''
+keywords = ["akid"]
+confidence = "high"
+tags = ["tencent", "credential"]
+
+[[rules]]
+id = "tencent-secret-key"
+description = "发现疑似腾讯云 SecretKey(与 AKID SecretId 同现)，可能暴露云资源访问权限，请确认有效性并及时轮换。"
+# SecretKey 为官方明文定长 32 位(文档: "SecretKey 是 32 位随机串")。
+# 关键词分支设计:
+#   - tencent: 覆盖 tencent_cloud_key 等不含 secret/key 字样的变量名(扩大召回);
+#   - secret|key: 兜底通用命名(secret_key/SECRET_KEY 常不带厂商前缀, 删掉会漏报)。
+# keywords 数组须同步包含 tencent, 否则关键词预过滤会挡掉不含 secret/key 的片段,
+# regex 的 tencent 分支将没有执行机会。
+regex = '''(?i)(?:tencent|secret|key)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([A-Za-z0-9]{32})(?:\\?['"\x60]|[\s;]|\\[nr]|$)'''
+keywords = ["tencent", "secret", "key"]
+confidence = "medium"
+filter = '''filter.entropy(finding["secret"]) < 3.5 || filter.tokenRatio(finding["secret"]) >= 2.5'''
+tags = ["tencent", "credential"]
+components = [
+    { id = "tencent-secret-id", within = "5L" },
+]

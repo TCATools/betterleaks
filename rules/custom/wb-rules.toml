@@ -1,0 +1,50 @@
+# 自定义凭据检测规则(独立于上游 gitleaks 规则集)。
+
+title = "credential rules"
+
+[[rules]]
+id = "password-plaintext"
+description = "密码/口令/password/passwd 关键词后跟明文值(如 密码222222、password='Abc123!@#'、口令:abc123)"
+# 关键词(中英) + 可选引号 ['"] + 捕获明文值。
+# 中文分支:密码/口令/密碼 后分隔符可选(覆盖「密码222222」这种无分隔符形态);
+# 英文分支:password/passwd 后必须分隔符 [:：=],否则代码里的 process.env.SMTP_PASSWORD,
+# 这类 env 引用会被当值误捕获。
+# 值须 ASCII 字母数字开头(排除「密码学」这类后跟汉字、passwordHasher 这类驼峰前缀的误报),
+# 后续限常见密码符号(排除 \x22 双引号 \x27 单引号,且不含 ; , . 空格 —— 防 name; / authentication.
+# 这类代码片段被吞进值),上限 64。
+# 值后终止边界:必须是引号/逗号/分号/右括号/空白/行尾,防把后续代码吞进值。
+# (?i) 大小写不敏感,覆盖 Password/PASSWORD 等。
+regex = '''(?i)(?:(?:密码|口令|密碼)\s*[:：=]?\s*['"]?|(?:password|passwd)\s*[:：=]\s*['"]?)([0-9A-Za-z][A-Za-z0-9_\-!@#$%^&*+=?]{0,63})(?:['"]|[,;)\s]|$)'''
+secretGroup = 1
+confidence = "medium"
+# supports_encryption 不声明。
+# 丢弃条件(任一为 true 即跳过该 finding,betterleaks 对 filter 返回 true 的 finding 跳过):
+#   1) 长度 < 6:消 44/17/217 这类行号/短数字误报;真实密码至少 6 位。
+#   2) 纯字母(如 is/weak/so):「password is weak」/「password to continue」等英文句子的纯字母词
+#      丢弃;含数字或符号的真实密码(222222/Abc123/Abc123!@#)保留。
+#   3) 占位符词表:教程/示例里的 your-xxx-password、ChangeMeNow123!、please_change_me_to_a_strong_password
+#      等占位符全丢。containsAny 是子串匹配(betterleaks 内部已小写化),覆盖 - 与 _ 分隔变体。
+#   4) 值含 password/passwd/secret/key/token/credential 作为独立 kebab/snake 段
+#      (如 planka_password、focalboard_secret、my-secret-key、api-key-123、xxx-token-value):
+#      这些是「引用某凭据的标识符/变量名」而非凭据本身,丢弃。真实密码极少把这类词作为分隔段。
+# 注:不抄 generic-api-key 的 entropy/failsTokenEfficiency 阈值 —— 那是值 ≥10 字符的前提,
+# 我们针对短密码(222222 熵 0、abc123 熵≈2.58)会被误杀。
+filter = '''
+len(finding["secret"]) < 6 ||
+matchesAny(finding["secret"], [`^[A-Za-z]+$`]) ||
+containsAny(finding["secret"], [
+  "changeme",
+  "change-me",
+  "change_me",
+  "please_change",
+  "password-here",
+  "password_here",
+  "db-password",
+  "db_password",
+  "your-",
+  "your_",
+  "example",
+  "placeholder",
+]) ||
+matchesAny(finding["secret"], [`(?i)(?:^|[-_])(?:password|passwd|secret|key|token|credential)(?:[-_]|$)`])
+'''

@@ -1,8 +1,50 @@
 {
   "task_params": {
     "scan_languages": [],
-    "rules": ["tca-internal-token", "aws-access-token", "github-pat", "private-key", "my-project-token"],
+    "rules": ["tca-internal-token", "aws-access-token", "github-pat", "private-key", "my-project-token", "password-plaintext", "tencent-secret-id", "tencent-secret-key"],
     "rule_list": [
+      {
+        "name": "tencent-secret-id",
+        "gid": 10805,
+        "pkg_id": 209,
+        "pkg_name": "betterleaks rule package",
+        "pkg_type": 1,
+        "tool_name": "betterleaks",
+        "category": 1,
+        "display_name": "TencentSecretId",
+        "rule_title": "腾讯云 SecretId(AKID 前缀)",
+        "severity": 2,
+        "custom": true,
+        "params": null
+      },
+      {
+        "name": "tencent-secret-key",
+        "gid": 10806,
+        "pkg_id": 209,
+        "pkg_name": "betterleaks rule package",
+        "pkg_type": 1,
+        "tool_name": "betterleaks",
+        "category": 1,
+        "display_name": "TencentSecretKey",
+        "rule_title": "腾讯云 SecretKey(需与 SecretId 同现)",
+        "severity": 2,
+        "custom": true,
+        "params": null
+      },
+      {
+        "name": "password-plaintext",
+        "gid": 10803,
+        "pkg_id": 209,
+        "pkg_name": "betterleaks rule package",
+        "pkg_type": 1,
+        "tool_name": "betterleaks",
+        "category": 1,
+        "display_name": "PasswordPlaintext",
+        "rule_title": "密码/口令关键词后跟明文值",
+        "severity": 2,
+        "custom": true,
+        "params": null
+      },
       {
         "name": "tca-internal-token",
         "gid": 10800,
@@ -44,6 +86,20 @@
         "severity": 2,
         "custom": true,
         "params": "regex=MYPROJECT-[A-Za-z0-9]{16,}\nkeywords=MYPROJECT\nconfidence=high"
+      },
+      {
+        "name": "curl-auth-header",
+        "gid": 10802,
+        "pkg_id": 209,
+        "pkg_name": "betterleaks rule package",
+        "pkg_type": 1,
+        "tool_name": "betterleaks",
+        "category": 1,
+        "display_name": "curl-auth-header",
+        "rule_title": "项目自定义令牌规则",
+        "severity": 2,
+        "custom": true,
+        "params": ""
       }
     ],
     "envs": "",

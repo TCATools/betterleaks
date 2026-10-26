@@ -61,15 +61,26 @@ def main():
     with tempfile.TemporaryDirectory() as td:
         code, log, data = run_scan({}, os.path.join(td, "full"))
         rules = rules_of(data)
-        expect = {"aws-access-token", "github-pat", "private-key", "tca-internal-token", "my-project-token"}
+        expect = {"aws-access-token", "github-pat", "private-key", "tca-internal-token",
+                  "my-project-token", "password-plaintext",
+                  "tencent-secret-id", "tencent-secret-key"}
         check("full-scan", code == 0 and rules == expect, "rules=%s code=%s" % (rules, code))
 
         # 2. 脱敏: msg 不得包含明文假密钥
         text = json.dumps(data, ensure_ascii=False)
         leaks = [s for s in ("AKIAXQ7ZM4T2PYN5RW3E", "ghp_16C7uDS0TFakeTokenForTestingPurposes",
-                             "TCA-INTERNAL-a1b2c3d4e5f6g7h8i9j0k1l2m3n4", "MYPROJECT-AbCdEf1234567890")
+                            "TCA-INTERNAL-a1b2c3d4e5f6g7h8i9j0k1l2m3n4", "MYPROJECT-AbCdEf1234567890",
+                            "Admin@123456", "AKIDFr9qlx382Gw8br6iS9gkhle565iszaGB",
+                            "Gu5t9zXe8Km2Nq7Rw4Yp6Bv3Dc1Fh0Ja")
                  if s in text]
         check("redact", not leaks, "leaked=%s" % leaks)
+
+        # 2a. password-plaintext 规则的 filter 生效: 误报样例不产出
+        pw = [d for d in data if d["rule"] == "password-plaintext"]
+        pw_text = json.dumps(pw, ensure_ascii=False)
+        check("password-filter",
+              len(pw) == 2 and "weak" not in pw_text and "please_change" not in pw_text,
+              "findings=%d" % len(pw))
 
         # 2b. 结果格式: 无 extra_data, 有 end_line/end_column, msg 不带 confidence/描述
         bad_schema = [d for d in data if "extra_data" in d

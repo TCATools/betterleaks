@@ -20,3 +20,28 @@ regex = "TCA-INTERNAL-[A-Za-z0-9]{20,40}"
 confidence = "high"
 tags = ["internal", "token"]
 keywords = ["TCA-INTERNAL"]
+[[rules]]
+id = "tencent-secret-id"
+description = "发现腾讯云 SecretId(AKID 前缀)，可能泄露账号标识，请确认是否为有效凭据并及时轮换。"
+regex = "\\b(AKID[A-Za-z0-9]{32})\\b"
+confidence = "high"
+tags = ["tencent", "credential"]
+keywords = ["akid"]
+[[rules]]
+id = "tencent-secret-key"
+description = "发现疑似腾讯云 SecretKey(与 AKID SecretId 同现)，可能暴露云资源访问权限，请确认有效性并及时轮换。"
+regex = "(?i)(?:tencent|secret|key)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([A-Za-z0-9]{32})(?:\\\\?['\"\\x60]|[\\s;]|\\\\[nr]|$)"
+filter = "filter.entropy(finding[\"secret\"]) < 3.5 || filter.tokenRatio(finding[\"secret\"]) >= 2.5"
+confidence = "medium"
+tags = ["tencent", "credential"]
+keywords = ["tencent", "secret", "key"]
+[[rules.components]]
+id = "tencent-secret-id"
+within = "5L"
+[[rules]]
+id = "password-plaintext"
+description = "密码/口令/password/passwd 关键词后跟明文值(如 密码222222、password='Abc123!@#'、口令:abc123)"
+regex = "(?i)(?:(?:密码|口令|密碼)\\s*[:：=]?\\s*['\"]?|(?:password|passwd)\\s*[:：=]\\s*['\"]?)([0-9A-Za-z][A-Za-z0-9_\\-!@#$%^&*+=?]{0,63})(?:['\"]|[,;)\\s]|$)"
+filter = "len(finding[\"secret\"]) < 6 ||\nmatchesAny(finding[\"secret\"], [`^[A-Za-z]+$`]) ||\ncontainsAny(finding[\"secret\"], [\n  \"changeme\",\n  \"change-me\",\n  \"change_me\",\n  \"please_change\",\n  \"password-here\",\n  \"password_here\",\n  \"db-password\",\n  \"db_password\",\n  \"your-\",\n  \"your_\",\n  \"example\",\n  \"placeholder\",\n]) ||\nmatchesAny(finding[\"secret\"], [`(?i)(?:^|[-_])(?:password|passwd|secret|key|token|credential)(?:[-_]|$)`])\n"
+confidence = "medium"
+secretGroup = 1

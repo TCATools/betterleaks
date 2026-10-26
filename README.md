@@ -17,6 +17,7 @@
 | `src/` | 运行时代码（仅标准库，Python 3.7+） |
 | `scripts/` | 维护脚本：二进制下载 / 规则合并 / 规则清单生成 |
 | `tests/` | 含假密钥样例与端到端测试 |
+| `tests/rule-examples/` | 全量规则示例语料库（每条示例注释规则名，`COVERAGE.md` 为覆盖率报告） |
 
 ## 本地调试
 
@@ -56,6 +57,7 @@ python3 tests/run_tests.py    # 9 项端到端测试
 ```bash
 python3 scripts/merge_custom_rules.py   # rules/custom/*.toml → config/tca.toml
 python3 scripts/gen_rules.py            # 刷新 rules_index.json + betterleaks.json（打印规则差异）
+python3 scripts/gen_rule_examples.py    # 重新生成 tests/rule-examples/ 规则示例语料库
 python3 tests/run_tests.py              # 回归
 ```
 

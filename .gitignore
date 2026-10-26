@@ -4,6 +4,8 @@ check_result.json
 betterleaks_report*.json
 betterleaks_runtime.toml
 result.json
+tests/rule-examples/
+scripts/gen_rule_examples.py
 
 # Python
 __pycache__/

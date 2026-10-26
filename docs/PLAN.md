@@ -92,10 +92,12 @@ betterleaks/
 ├── scripts/
 │   ├── fetch_bin.sh              # 下载官方五端二进制并校验 checksums.txt
 │   ├── merge_custom_rules.py      # rules/custom/*.toml → config/tca.toml
-│   └── gen_rules.py               # 默认+自定义规则 → rules_index.json + betterleaks.json（含差异报告）
+│   ├── gen_rules.py               # 默认+自定义规则 → rules_index.json + betterleaks.json（含差异报告）
+│   └── gen_rule_examples.py       # 生成全量规则示例语料库 tests/rule-examples/（静态样例+正则反向采样+验证闭环）
 ├── tests/
 │   ├── fixtures/                  # 含假密钥的样例（AWS/GitHub/私钥/内部令牌/项目令牌）
-│   ├── run_tests.py               # 9 项端到端测试
+│   ├── rule-examples/              # 全量规则示例语料库（官方静态样例 + 正则反向采样，COVERAGE.md 覆盖率报告）
+│   ├── run_tests.py               # 13 项端到端测试
 │   └── output/                    # 本地调试输出（gitignore）
 ├── task_request.json / test.sh    # 本地调试
 ├── README.md / CHANGELOG.md
