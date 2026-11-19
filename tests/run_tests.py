@@ -63,7 +63,7 @@ def main():
         rules = rules_of(data)
         expect = {"aws-access-token", "github-pat", "private-key", "tca-internal-token",
                   "my-project-token", "password-plaintext",
-                  "tencent-secret-id", "tencent-secret-key"}
+                  "tencent-secret-id", "tencent-secret-key", "tencent-tokenhub-api-key"}
         check("full-scan", code == 0 and rules == expect, "rules=%s code=%s" % (rules, code))
 
         # 2. 脱敏: msg 不得包含明文假密钥
@@ -71,7 +71,9 @@ def main():
         leaks = [s for s in ("AKIAXQ7ZM4T2PYN5RW3E", "ghp_16C7uDS0TFakeTokenForTestingPurposes",
                             "TCA-INTERNAL-a1b2c3d4e5f6g7h8i9j0k1l2m3n4", "MYPROJECT-AbCdEf1234567890",
                             "Admin@123456", "AKIDFr9qlx382Gw8br6iS9gkhle565iszaGB",
-                            "Gu5t9zXe8Km2Nq7Rw4Yp6Bv3Dc1Fh0Ja")
+                            "Gu5t9zXe8Km2Nq7Rw4Yp6Bv3Dc1Fh0Ja",
+                            "sk-tp-Xk29FzQm7Vb4Lr8Nw3Ys6Jh1Cd5Gt0Ue",
+                            "sk-Vq3mZx8Kw2Nf7Rt5Yc9Jb4Hs6Dg1Le0Up8Ai5Oq2Xn7Wm3Zk")
                  if s in text]
         check("redact", not leaks, "leaked=%s" % leaks)
 
@@ -81,6 +83,14 @@ def main():
         check("password-filter",
               len(pw) == 2 and "weak" not in pw_text and "please_change" not in pw_text,
               "findings=%d" % len(pw))
+
+        # 2a-2. tencent-tokenhub-api-key 规则的 filter 生效: 低熵占位符不产出
+        th = [d for d in data if d["rule"] == "tencent-tokenhub-api-key"]
+        th_text = json.dumps(th, ensure_ascii=False)
+        check("tokenhub-filter",
+              len(th) == 2 and "aaaa" not in th_text
+              and all(d["path"].endswith("tokenhub.py") for d in th),
+              "findings=%d" % len(th))
 
         # 2b. 结果格式: 无 extra_data, 有 end_line/end_column, msg 不带 confidence/描述
         bad_schema = [d for d in data if "extra_data" in d

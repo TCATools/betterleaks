@@ -11,6 +11,9 @@
   },
   "tencent-secret-key": {
    "publish": true
+  },
+  "tencent-tokenhub-api-key": {
+   "publish": true
   }
  }
 }

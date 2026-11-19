@@ -16,7 +16,8 @@
   - 全程列表传参调用二进制, 不使用 shell;
   - 显式 -c 传入运行时配置, 不读取仓库内 .betterleaks.toml/.gitleaks.toml;
   - 不开启 --validation, 不与任何外部服务交互;
-  - 报告与运行时配置中的敏感值由二进制 --redact 脱敏, 用后即删。
+  - 中间报告由二进制 --redact 脱敏, 扫描后删除; runtime.toml 仅含 extend 路径/
+    规则 ID/自定义规则参数, 不含敏感值, 保留在 RESULT_DIR 便于排查。
 """
 import argparse
 import glob
@@ -31,7 +32,6 @@ import platform_bin
 import result_converter
 from utils import (
     ROOT_DIR,
-    detect_injection_symbols,
     get_int_env,
     get_path_filters,
     get_tool_env,
@@ -103,7 +103,6 @@ def build_scan_cmd(bin_path, runtime_toml, report_path, targets, tool_env):
         "-l", "warn",
     ]
     for target in targets:
-        detect_injection_symbols(target)
         cmd.append(target)
 
     min_confidence = (tool_env.get("BETTERLEAKS_MIN_CONFIDENCE") or "").strip().lower()
@@ -243,16 +242,15 @@ def run_scan():
         print("[scan] findings: %d (reports=%d)" % (len(results), len(report_paths)))
         write_json(result_path, results)
     finally:
-        # 中间报告与运行时配置含(已脱敏的)敏感信息, 用后即删
+        # 中间报告含部分脱敏的密钥明文, 用后即删;
+        # runtime.toml 无敏感值, 保留便于排查(注意: 自定义规则若在 regex 中
+        # 内嵌真实密钥片段, 会原样保留, 请勿在规则参数中写入敏感值)
         for report_path in glob.glob(os.path.join(result_dir, "betterleaks_report*.json")):
             try:
                 os.remove(report_path)
             except OSError:
                 pass
-        try:
-            os.remove(runtime_toml)
-        except OSError:
-            pass
+        print("[scan] runtime config kept for debugging: %s" % runtime_toml)
 
     print("[scan] result written: %s" % result_path)
     return 0

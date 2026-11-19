@@ -6,11 +6,14 @@
 产出:
   1. config/rules_index.json —— 运行时使用的规则结构化索引(全部规则定义 + 组件依赖),
      运行时不再解析 TOML, 兼容 Python 3.7+ 节点。
-  2. betterleaks.json        —— TCA 工具元数据 + checkrule_set, 用于平台登记规则包。
-  3. stdout 打印与上一版 rules_index.json 的差异(新增/删除), 便于升级同步。
+  2. betterleaks_en.json    —— TCA 工具元数据 + checkrule_set 英文版(描述直接来自 TOML 源)。
+  3. betterleaks.json       —— 中文版: 按规则名(real_name)对齐, 描述未变更时沿用已翻译的
+     rule_title/description; TOML 描述变更 -> 译文过期提示重新翻译; 新增规则提示待翻译。
+  4. stdout 打印与上一版 rules_index.json 的差异(新增/删除), 便于升级同步。
 
 用法: python3 scripts/gen_rules.py
 """
+import copy
 import json
 import os
 import sys
@@ -27,6 +30,7 @@ TCA_TOML = os.path.join(ROOT_DIR, "config", "tca.toml")
 RULES_META = os.path.join(ROOT_DIR, "config", "rules_meta.json")
 RULES_INDEX = os.path.join(ROOT_DIR, "config", "rules_index.json")
 BETTERLEAKS_JSON = os.path.join(ROOT_DIR, "betterleaks.json")
+BETTERLEAKS_JSON_EN = os.path.join(ROOT_DIR, "betterleaks_en.json")
 
 BETTERLEAKS_VERSION = "1.9.0"
 
@@ -78,14 +82,69 @@ def build_checkrule(rule_id, meta):
         "category": "security",
         "rule_title": (meta.get("description") or rule_id)[:200],
         "rule_params": None,
-        "custom": bool(meta.get("custom")),
+        # TCA 规则包统一登记为内置规则, custom/labels 不随规则来源区分
+        "custom": False,
         "languages": [],
         "solution": SOLUTION_TEXT,
         "owner": None,
-        "labels": meta.get("tags") or [],
+        "labels": [],
         "description": meta.get("description") or rule_id,
         "disable": bool(meta.get("skipReport")),
     }
+
+
+def _load_checkrules(path):
+    """读取清单文件, 返回 ({real_name: rule}, {tool_name: tool_description})。"""
+    rules, tool_desc = {}, {}
+    if not os.path.exists(path):
+        return rules, tool_desc
+    with open(path, "r", encoding="utf-8") as fp:
+        data = json.load(fp)
+    for t in data:
+        tool_desc[t.get("name")] = t.get("description")
+        for r in t.get("checkrule_set") or []:
+            rules[r["real_name"]] = r
+    return rules, tool_desc
+
+
+def apply_chinese_overlay(tool_meta, zh_path, en_prev_path):
+    """按规则名(real_name)对齐, 把已翻译的中文 rule_title/description 叠加到新生成的清单上。
+
+    翻译沿用条件(需同时满足):
+      1. 上一版中文清单(betterleaks.json)中已有该规则的翻译;
+      2. 上一版英文清单(betterleaks_en.json, 即上次生成时的 TOML 描述)与本次
+         TOML 生成的描述一致 —— 描述未变更, 翻译仍然有效。
+    否则:
+      - 描述已变更 -> 译文过期, 沿用新描述并提示重新翻译(stale 列表);
+      - 新增规则   -> 沿用 TOML 源描述(默认规则为英文), 提示待翻译(untranslated 列表);
+      - 上一版英文清单不存在(首次运行) -> 无法比对, 仅按规则名对齐沿用翻译。
+    已删除的规则不再出现在新清单中(以新生成的为准)。
+    """
+    prev_zh, zh_tool_desc = _load_checkrules(zh_path)
+    prev_en, _ = _load_checkrules(en_prev_path)
+    has_prev_en = bool(prev_en)
+
+    stale, untranslated = [], []
+    for t in tool_meta:
+        new_set = []
+        for r in t["checkrule_set"]:
+            rid = r["real_name"]
+            prev = prev_zh.get(rid)
+            if prev and (not has_prev_en or prev_en[rid]["description"] == r["description"]):
+                # 描述未变更: 沿用中文翻译
+                r["rule_title"] = prev["rule_title"]
+                r["description"] = prev["description"]
+            elif prev:
+                # 描述已变更: 译文过期, 沿用新描述
+                stale.append(rid)
+            else:
+                # 新增规则
+                untranslated.append(rid)
+            new_set.append(r)
+        t["checkrule_set"] = new_set
+        if zh_tool_desc.get(t.get("name")):
+            t["description"] = zh_tool_desc[t["name"]]
+    return tool_meta, stale, untranslated
 
 
 def main():
@@ -187,9 +246,25 @@ def main():
         "remote_work_enabled": None,
     }]
 
-    with open(BETTERLEAKS_JSON, "w", encoding="utf-8") as fp:
+    # 中文版: 按规则名对齐叠加已有翻译。
+    # 注意: 需在覆写英文清单之前执行, 才能拿到上一版英文描述做一致性比对;
+    # 深拷贝避免原地修改污染英文清单。
+    zh_meta, stale, untranslated = apply_chinese_overlay(
+        copy.deepcopy(tool_meta), BETTERLEAKS_JSON, BETTERLEAKS_JSON_EN)
+
+    with open(BETTERLEAKS_JSON_EN, "w", encoding="utf-8") as fp:
         json.dump(tool_meta, fp, ensure_ascii=False, indent=2)
+        fp.write("\n")
+    print(">> wrote %s (%d checkrules)" % (BETTERLEAKS_JSON_EN, len(checkrule_set)))
+
+    with open(BETTERLEAKS_JSON, "w", encoding="utf-8") as fp:
+        json.dump(zh_meta, fp, ensure_ascii=False, indent=2)
+        fp.write("\n")
     print(">> wrote %s (%d checkrules)" % (BETTERLEAKS_JSON, len(checkrule_set)))
+    if stale:
+        print("!! 规则描述已变更, 中文翻译过期(已沿用新描述, 请更新翻译): %s" % ", ".join(stale))
+    if untranslated:
+        print(">> 新增规则待翻译(暂沿用 TOML 源描述): %s" % ", ".join(untranslated))
 
 
 if __name__ == "__main__":

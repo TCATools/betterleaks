@@ -1,0 +1,27 @@
+# rules/custom/tencent-tokenhub.toml
+# 腾讯云 TokenHub(大模型服务平台) API Key 识别。
+#
+# 背景: TokenHub 聚合混元/DeepSeek/GLM/Kimi 等多家模型, API Key 在控制台
+# 「API 密钥管理」页面创建, 常规密钥为 sk- 开头 + 48 个字符(官方文档未公布
+# 字符集, 按 OpenAI 兼容平台惯例取字母数字与 _ -); Token Plan 订阅密钥为
+# sk-tp- 前缀(每主账号一个, 通用与 Hy 套餐共用, 长度未公布, 取 16-64 宽容区间)。
+#
+# 设计语义:
+#   - sk- 前缀格式在正常代码中不会自然出现, 单独泄露即可确认风险
+#     -> 独立检测、独立报告(confidence=high), 无需组件配对。
+#   - filter 用熵/TokenRatio 下限过滤文档占位符(如 sk-xxxxx、sk-abcabc)与低熵误报。
+#   - 已知格式重叠(接受): OpenAI 经典密钥同为 sk-+48 位字母数字(内含 T3BlbkFJ
+#     标记), Kimi 密钥为 sk-+48 位含 _-。重叠密钥会被本规则与对应厂商规则
+#     双重报告 —— 对泄露检测而言均为有效告警, 且 openai-api-key 规则通过
+#     T3BlbkFJ 关键词给出正确厂商标签。
+#   - 命名注意: 官方默认配置(截至 v1.9.0)无 tokenhub 规则; 若将来官方新增同名 id,
+#     [extend] 合并时同 id 整条覆盖(自定义优先), gen_rules.py 的差异报告会提示。
+
+[[rules]]
+id = "tencent-tokenhub-api-key"
+description = "发现腾讯云 TokenHub(大模型服务平台) API Key，可能暴露混元/DeepSeek 等模型调用与计费资源，请确认有效性并及时轮换。"
+regex = '''\b(sk-(?:tp-[A-Za-z0-9_-]{16,64}|[A-Za-z0-9_-]{48}))(?:\\?['"\x60]|[\s;]|\\[nr]|$)'''
+keywords = ["sk-"]
+confidence = "high"
+filter = '''filter.entropy(finding["secret"]) < 3.0 || filter.tokenRatio(finding["secret"]) >= 2.5'''
+tags = ["tencent", "credential", "ai"]

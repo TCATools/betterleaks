@@ -14,8 +14,6 @@ import json
 import os
 import re
 
-from utils import detect_injection_symbols
-
 # 任务级规则参数白名单
 RULE_PARAM_KEYS = ("regex", "keywords", "path", "secretGroup", "min_entropy", "confidence", "exclude_paths")
 CONFIDENCE_VALUES = ("low", "medium", "high")
@@ -71,7 +69,6 @@ def parse_rule_params(raw_params):
     for key, value in items:
         if key not in RULE_PARAM_KEYS:
             raise Exception("不支持的规则参数: %s (允许: %s)" % (key, ", ".join(RULE_PARAM_KEYS)))
-        detect_injection_symbols(value)
         parsed[key] = value
     return parsed
 
@@ -88,7 +85,6 @@ def _split_list(value, max_count, what):
     if len(values) > max_count:
         raise Exception("%s 数量超过上限 %d" % (what, max_count))
     for v in values:
-        detect_injection_symbols(v)
         if len(v) > 256:
             raise Exception("%s 单项超过 256 字符: %s..." % (what, v[:32]))
     return values
@@ -106,7 +102,6 @@ def apply_params(rule, params, rule_id):
     if "keywords" in params:
         merged["keywords"] = _split_list(params["keywords"], MAX_KEYWORDS, "规则 %s keywords" % rule_id)
     if "path" in params:
-        detect_injection_symbols(params["path"])
         merged["path"] = params["path"]
     if "secretGroup" in params:
         try:

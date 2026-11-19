@@ -1,7 +1,7 @@
 {
   "task_params": {
     "scan_languages": [],
-    "rules": ["tca-internal-token", "aws-access-token", "github-pat", "private-key", "my-project-token", "password-plaintext", "tencent-secret-id", "tencent-secret-key"],
+    "rules": ["tca-internal-token", "aws-access-token", "github-pat", "private-key", "my-project-token", "password-plaintext", "tencent-secret-id", "tencent-secret-key", "tencent-tokenhub-api-key"],
     "rule_list": [
       {
         "name": "tencent-secret-id",

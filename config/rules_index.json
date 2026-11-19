@@ -5270,6 +5270,22 @@
     "credential"
    ]
   },
+  "tencent-tokenhub-api-key": {
+   "confidence": "high",
+   "custom": true,
+   "description": "发现腾讯云 TokenHub(大模型服务平台) API Key，可能暴露混元/DeepSeek 等模型调用与计费资源，请确认有效性并及时轮换。",
+   "filter": "filter.entropy(finding[\"secret\"]) < 3.0 || filter.tokenRatio(finding[\"secret\"]) >= 2.5",
+   "id": "tencent-tokenhub-api-key",
+   "keywords": [
+    "sk-"
+   ],
+   "regex": "\\b(sk-(?:tp-[A-Za-z0-9_-]{16,64}|[A-Za-z0-9_-]{48}))(?:\\\\?['\"\\x60]|[\\s;]|\\\\[nr]|$)",
+   "tags": [
+    "tencent",
+    "credential",
+    "ai"
+   ]
+  },
   "thunderstore-api-token.1": {
    "confidence": "high",
    "custom": false,

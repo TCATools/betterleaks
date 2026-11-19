@@ -39,6 +39,14 @@ keywords = ["tencent", "secret", "key"]
 id = "tencent-secret-id"
 within = "5L"
 [[rules]]
+id = "tencent-tokenhub-api-key"
+description = "发现腾讯云 TokenHub(大模型服务平台) API Key，可能暴露混元/DeepSeek 等模型调用与计费资源，请确认有效性并及时轮换。"
+regex = "\\b(sk-(?:tp-[A-Za-z0-9_-]{16,64}|[A-Za-z0-9_-]{48}))(?:\\\\?['\"\\x60]|[\\s;]|\\\\[nr]|$)"
+filter = "filter.entropy(finding[\"secret\"]) < 3.0 || filter.tokenRatio(finding[\"secret\"]) >= 2.5"
+confidence = "high"
+tags = ["tencent", "credential", "ai"]
+keywords = ["sk-"]
+[[rules]]
 id = "password-plaintext"
 description = "密码/口令/password/passwd 关键词后跟明文值(如 密码222222、password='Abc123!@#'、口令:abc123)"
 regex = "(?i)(?:(?:密码|口令|密碼)\\s*[:：=]?\\s*['\"]?|(?:password|passwd)\\s*[:：=]\\s*['\"]?)([0-9A-Za-z][A-Za-z0-9_\\-!@#$%^&*+=?]{0,63})(?:['\"]|[,;)\\s]|$)"

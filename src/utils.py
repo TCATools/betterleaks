@@ -18,16 +18,6 @@ ENV_KEYS = (
 )
 
 
-def detect_injection_symbols(cmd_str):
-    """检查字符串中是否存在命令注入符号, 存在则抛异常。"""
-    if not cmd_str:
-        return
-    symbols = "|".join(["\\n", ";", "&+", "\\|+", "`", "\\$\\("])
-    match_chars = re.findall(symbols, cmd_str)
-    if match_chars:
-        raise Exception("Find Injection Symbols(%s) in command: %s" % (match_chars, cmd_str))
-
-
 def run_cmd(cmd_args, timeout=None, cwd=None):
     """执行外部命令, 列表传参且不使用 shell, 防止命令注入。"""
     if not isinstance(cmd_args, (list, tuple)):
@@ -107,7 +97,6 @@ def get_path_filters(task_params):
         for pattern in patterns or []:
             if not pattern:
                 continue
-            detect_injection_symbols(pattern)
             compiled.append(re.compile(pattern))
         return compiled
 
